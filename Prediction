@@ -1,0 +1,39 @@
+pip install numpy pandas scikit-learn
+import pandas as pd
+
+# Example datasets
+jobs = pd.DataFrame({
+    'JobID': ['J1', 'J2', 'J3'],
+    'Skills': ['python, sql, machine learning', 'html, css, javascript', 'c++, java, algorithms']
+})
+
+candidates = pd.DataFrame({
+    'CandidateID': ['C1', 'C2', 'C3'],
+    'Skills': ['sql, python, java', 'javascript, css, html', 'machine learning, c++, algorithms']
+})
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+
+vectorizer = TfidfVectorizer()
+
+
+all_skills = pd.concat([jobs['Skills'], candidates['Skills']])
+tfidf_matrix = vectorizer.fit_transform(all_skills)
+
+
+job_tfidf = tfidf_matrix[:len(jobs)]
+candidate_tfidf = tfidf_matrix[len(jobs):]
+from sklearn.metrics.pairwise import cosine_similarity
+
+
+similarity_matrix = cosine_similarity(candidate_tfidf, job_tfidf)
+
+# Displaying similarity results
+for i, candidate_id in enumerate(candidates['CandidateID]):
+    for j, job_id in enumerate(jobs['JobID']):
+        print(f"Candidate {candidate_id} to Job {job_id}: {similarity_matrix[i][j]:.4f}")
+top_recommendations = similarity_matrix.argmax(axis=1)
+
+for i, candidate_id in enumerate(candidates['CandidateID']):
+    recommended_job_id = jobs.iloc[top_recommendations[i]]['JobID']
+    print(f"Top recommended job for Candidate {candidate_id}: {recommended_job_id}")
